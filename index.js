@@ -7,15 +7,17 @@ var uuid = 0;
 var express = require('express'), app = express();
 var session = require('express-session');
 var passport = require('passport');
-var linkedIn = require('passport-linkedin-oauth2').Strategy;
+var LinkedIn = require('passport-linkedin-oauth2').Strategy;
 
+
+app.set('views', __dirname + '/views');
+app.set('view engine', 'jade');
 
 app.use(session({
-  genid: function() {
-    return genuuid()
-  },
-  secret: process.env.SESSION_SECRET
-}))
+  secret: process.env.SESSION_SECRET,
+	resave: false,
+	saveUninitialized: true
+}));
 
 app.use(passport.initialize());
 app.use(passport.session());
@@ -29,7 +31,7 @@ passport.deserializeUser(function(obj, done) {
 
 
 
-passport.use(new LinkedInStrategy({
+passport.use(new LinkedIn({
   clientID: process.env.LINKEDIN_CLIENT_ID,
   clientSecret: process.env.LINKEDIN_CLIENT_SECRET,
   callbackURL: process.env.HOST + "/auth/linkedin/callback",
@@ -40,8 +42,8 @@ passport.use(new LinkedInStrategy({
   done(null,newProfile );
 }));
 
-app.get('/', funtion(request, response) {
-	response.json(request.user);
+app.get('/', function(request, response) {
+	response.render(request.user ? 'loggedin' : 'loggedout');
 });
 
 app.get('/auth/linkedin',
@@ -62,19 +64,6 @@ app.get('/logout', function(req, res){
 });
 
 
-
-
-var crudl = require('./routes/crudl');
-//app.use('/route', crudl('<table_name>', [
-  { name: 'column1', type: 'integer' },
-  { name: 'column2', type: 'string' },
-  { name: 'column3', type: 'boolean' },
-  { name: 'column3', type: 'datetime' }
-]));
-
-app.get('/*', function(request, response) {
-	response.json(request.user);
-});
 
 app.listen(process.env.PORT || 8000, function() {
   console.log('The NSA is listening on port', process.env.PORT || 8000);
